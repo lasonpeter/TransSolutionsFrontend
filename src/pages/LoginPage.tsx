@@ -16,6 +16,7 @@ export default function LoginPage() {
       const data = await api.post('/auth/login', { email, password });
       if(data.type === "success"){
         localStorage.setItem('token', data.data.token);
+        localStorage.setItem('refreshToken', data.data.refreshToken);
         toast.success("Login successful", { autoClose: 2000});
       }
       navigate('/');

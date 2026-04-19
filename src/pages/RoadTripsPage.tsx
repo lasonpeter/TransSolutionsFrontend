@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
-import {api, serializeErrors} from '../api/client';
+import {api, serializeErrors, getUserRole} from '../api/client';
+import {toast, ToastContainer} from "react-toastify";
 
 interface RoadTripItem {
   id: string;
@@ -28,8 +29,11 @@ export default function RoadTripsPage() {
   const [roadTrips, setRoadTrips] = useState<RoadTripItem[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const userRole = getUserRole(); // 0: Driver, 1: Manager, 2: Admin
+  
   const [formData, setFormData] = useState({
     carId: '',
+    deviceId: '',
     startDate: '',
     endDate: '',
     distance: 0,
@@ -37,13 +41,11 @@ export default function RoadTripsPage() {
   });
   const [errors, setErrors] = useState<string[]>([]);
 
-
   const fetchData = async () => {
     try {
       const rtData = await api.get('/road-trip/get-road-trips');
       if(rtData.type === "error"){
         setErrors(serializeErrors(rtData));
-
       }
       if(rtData.type === "success"){
         setRoadTrips(rtData.data.roadTrips || []);
@@ -52,16 +54,15 @@ export default function RoadTripsPage() {
       const vData = await api.get('/vehicle/get-vehicles');
       if(vData.type === "error"){
         setErrors(serializeErrors(vData));
-
       }
       if(vData.type === "success"){
         setVehicles(vData.data.vehicles || []);
       }
 
+      // Fetch drivers only for displaying names in the list
       const dData = await api.get('/driver/get-drivers');
       if(dData.type === "error"){
         setErrors(serializeErrors(dData));
-
       }
       if(dData.type === "success"){
         setDrivers(dData.data.drivers || []);
@@ -78,30 +79,49 @@ export default function RoadTripsPage() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await api.post('/road-trip/create', {
-        ...formData,
+      const payload = {
+        carId: formData.carId,
+        deviceId: formData.deviceId,
         startDate: new Date(formData.startDate).toISOString(),
         endDate: new Date(formData.endDate).toISOString(),
-      });
+        distance: formData.distance,
+        averageFuelConsumption: formData.averageFuelConsumption
+      };
+
+      const response = await api.post('/road-trip/create', payload);
       if(response.type === "error"){
         setErrors(serializeErrors(response));
+        toast.error("Failed to add road trip", {autoClose: 2000});
       }
       if(response.type === "success"){
-        setFormData({ carId: '', startDate: '', endDate: '', distance: 0, averageFuelConsumption: 0 });
+        setFormData({ 
+          carId: '', 
+          deviceId: '', 
+          startDate: '', 
+          endDate: '', 
+          distance: 0, 
+          averageFuelConsumption: 0 
+        });
+        toast.success("Road trip added successfully!", {autoClose: 2000});
         fetchData();
       }
-    } catch (err: unknown) {
-      setErrors(err.message || 'Failed to add road trip');
+    } catch (err: any) {
+      setErrors([err.message || 'Failed to add road trip']);
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure?')) return;
     try {
-      await api.delete('/road-trip/delete', { id });
-      fetchData();
+      const result = await api.delete('/road-trip/delete', { id });
+      if (result.type === 'success') {
+        toast.success("Road trip deleted successfully!", {autoClose: 2000});
+        fetchData();
+      } else {
+        toast.error("Delete failed", {autoClose: 2000});
+      }
     } catch (err: any) {
-      alert(err.message || 'Delete failed');
+      toast.error(err.message || 'Delete failed', {autoClose: 2000});
     }
   };
 
@@ -119,7 +139,11 @@ export default function RoadTripsPage() {
     <div className="space-y-8">
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-xl font-bold mb-4">Add New Road Trip</h2>
-        {errors && <div className="bg-red-100 text-red-700 p-2 mb-4 rounded">{errors}</div>}
+        {errors && errors.length > 0 && (
+          <div className="bg-red-100 text-red-700 p-2 mb-4 rounded">
+            {errors.map((error, idx) => <div key={idx}>{error}</div>)}
+          </div>
+        )}
         <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <select
             className="p-2 border rounded"
@@ -132,6 +156,16 @@ export default function RoadTripsPage() {
               <option key={v.id} value={v.id}>{v.name} ({v.registrationPlateNumber})</option>
             ))}
           </select>
+
+          <input
+            type="text"
+            placeholder="Device ID (GUID)"
+            className="p-2 border rounded"
+            value={formData.deviceId}
+            onChange={(e) => setFormData({ ...formData, deviceId: e.target.value })}
+            required
+          />
+
           <input
             type="datetime-local"
             className="p-2 border rounded"
@@ -148,6 +182,7 @@ export default function RoadTripsPage() {
           />
           <input
             type="number"
+            step="0.01"
             placeholder="Distance (km)"
             className="p-2 border rounded"
             value={formData.distance}
@@ -156,6 +191,7 @@ export default function RoadTripsPage() {
           />
           <input
             type="number"
+            step="0.01"
             placeholder="Avg Fuel Consumption"
             className="p-2 border rounded"
             value={formData.averageFuelConsumption}
@@ -206,6 +242,7 @@ export default function RoadTripsPage() {
           </table>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }

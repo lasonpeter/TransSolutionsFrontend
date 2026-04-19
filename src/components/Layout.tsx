@@ -10,7 +10,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     navigate('/login');
+    window.location.reload();
   };
 
   return (
