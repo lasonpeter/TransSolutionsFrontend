@@ -87,7 +87,7 @@ async function handleResponse(res: Response): Promise<ErrorResponse | SuccessRes
 
   try {
     const data = text ? JSON.parse(text) : {};
-    return { type: 'success', data };
+    return { type: 'success', data: data };
   } catch (e) {
     return { type: 'success', data: text };
   }
