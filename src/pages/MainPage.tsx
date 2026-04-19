@@ -6,7 +6,7 @@ export default function MainPage() {
     <div className="text-center mt-20">
       <h1 className="text-4xl font-bold text-gray-800">Welcome to TransSolutions</h1>
       <p className="text-xl text-gray-600 mt-4">
-        Your comprehensive transport management system.
+
       </p>
       {!token && (
         <div className="mt-8">
