@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import {api, serializeErrors} from '../api/client';
+import {toast, ToastContainer} from "react-toastify";
 
 interface VehicleItem {
   id: string;
@@ -19,6 +20,7 @@ export default function VehiclesPage() {
       const data = await api.get('/vehicle/get-vehicles');
       if(data.type === "error"){
         setErrors(serializeErrors(data));
+        toast.error("Failed to fetch vehicles", {autoClose: 2000});
       }
       if(data.type === "success") {
         setVehicles(data.data.vehicles || []);
@@ -38,9 +40,11 @@ export default function VehiclesPage() {
       const result = await api.post('/vehicle/create-vehicle', formData);
       if(result.type === "error"){
         setErrors(serializeErrors(result));
+        toast.error("Failed to add vehicle", {autoClose: 2000});
       }
       if(result.type === "success"){
         setFormData({ name: '', registrationPlateNumber: '', vehicleType: 0 });
+        toast.success("Vehicle added successfully!", {autoClose: 2000});
         fetchVehicles();
       }
     } catch (err: any) {
@@ -52,8 +56,9 @@ export default function VehiclesPage() {
     try {
       await api.delete('/vehicle/delete-vehicle', { id });
       fetchVehicles();
+      toast.success("Vehicle deleted successfully!", {autoClose: 2000});
     } catch (err: any) {
-      alert(err.message || 'Delete failed');
+      toast.error("Failed to delete vehicle", {autoClose: 2000});
     }
   };
 
@@ -125,6 +130,7 @@ export default function VehiclesPage() {
           </tbody>
         </table>
       </div>
+      <ToastContainer />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { api } from '../api/client';
 import { useNavigate } from 'react-router-dom';
+import {toast, ToastContainer} from "react-toastify";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -15,6 +16,7 @@ export default function LoginPage() {
       const data = await api.post('/auth/login', { email, password });
       if(data.type === "success"){
         localStorage.setItem('token', data.data.token);
+        toast.success("Login successful", { autoClose: 2000});
       }
       navigate('/');
       window.location.reload(); // Quick way to update layout navbar
@@ -52,6 +54,7 @@ export default function LoginPage() {
           Login
         </button>
       </form>
+      <ToastContainer />
     </div>
   );
 }

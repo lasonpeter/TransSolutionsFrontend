@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import {api, getUserRole, serializeErrors} from '../api/client';
-import toast from 'react-hot-toast';
+import { ToastContainer, toast } from 'react-toastify';
 
 export interface User {
   id: string;
@@ -29,7 +29,7 @@ export default function RegisterPage() {
   const userRole = getUserRole();
 
   const fetchUsers = async () => {
-    const result = await api.get('/api/v1/user/get-users');
+    const result = await api.get('/user/get-users');
     if (result.type == 'error') {
       setErrors(serializeErrors(result));
       return;
@@ -50,17 +50,19 @@ export default function RegisterPage() {
 
     if (result.type === 'error') {
       setRegisterErrors(serializeErrors(result));
+      toast.error("Errors", { autoClose: 2000});
       return;
     }
     if (result.type === 'success') {
       setFormData({ email: '', password: '', name: '', surname: '', role: 0 });
+      toast.success("User registered", { autoClose: 2000});
       fetchUsers();
     }
   };
 
   const copyToClipboard = (id: string) => {
     navigator.clipboard.writeText(id);
-    toast.success('GUID copied to clipboard!');
+    toast.success("ID copied to clipboard!", { autoClose: 2000});
   };
 
   return (
@@ -136,7 +138,6 @@ export default function RegisterPage() {
                 <th className="p-2">Name</th>
                 <th className="p-2">Surname</th>
                 <th className="p-2">Email</th>
-                <th className="p-2">Role</th>
               </tr>
             </thead>
             <tbody>
@@ -161,6 +162,7 @@ export default function RegisterPage() {
           </table>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }

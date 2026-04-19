@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import {api, serializeErrors} from '../api/client';
+import {toast, ToastContainer} from "react-toastify";
 
 interface DriverItem {
   id: string;
@@ -42,13 +43,16 @@ export default function DriversPage() {
       });
       if(response.type === "error"){
         setErrors(serializeErrors(response));
+        toast.error("Failed to add driver", {autoClose: 2000});
       }
       if(response.type === "success"){
+        toast.success("Driver added successfully!", {autoClose: 2000});
         setFormData({ userId: '', categories: [] });
         fetchDrivers();
       }
     } catch (err: any) {
       setErrors(err.message || 'Failed to add driver');
+      toast.error("Failed to add driver", {autoClose: 2000});
     }
   };
 
@@ -57,8 +61,10 @@ export default function DriversPage() {
     try {
       await api.delete('/driver/delete-driver', { id });
       fetchDrivers();
+      toast.success("Driver deleted successfully!", {autoClose: 2000});
     } catch (err: any) {
       alert(err.message || 'Delete failed');
+      toast.error("Failed to delete driver", {autoClose: 2000});
     }
   };
 
@@ -135,6 +141,7 @@ export default function DriversPage() {
           </tbody>
         </table>
       </div>
+      <ToastContainer />
     </div>
   );
 }

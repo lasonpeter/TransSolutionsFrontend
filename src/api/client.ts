@@ -76,6 +76,11 @@ export function serializeErrors(resp: ErrorResponse): string[] {
 
 async function handleResponse(res: Response): Promise<ErrorResponse | SuccessResponse> {
   const text = await res.text();
+  //Unatuhorized
+  if(res.status == 401){
+    const errors = ["Unauthorized"];
+    return {type: "error", errors: errors};
+  }
   if (!res.ok) {
     try {
       const errorData = JSON.parse(text);
